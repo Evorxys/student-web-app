@@ -40,6 +40,7 @@ export default function Home() {
     // Handle incoming Socket.IO messages
     socket.current.on('receiveMessage', (data) => {
       const receivedMessage = `Teacher: ${data}`;
+      console.log("Received from teacher:", data); // Log received message
       setMessages((prevMessages) => [...prevMessages, receivedMessage]);
     });
 
@@ -141,6 +142,7 @@ export default function Home() {
 
       // Send message via Socket.IO
       if (socket.current) {
+        console.log("Sending message:", inputText); // Log message being sent
         socket.current.emit('sendMessage', inputText); // Emit the message to the backend
       }
 
