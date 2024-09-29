@@ -155,7 +155,7 @@ export default function Home() {
       <Box bgColor="#2D3748" height="100vh" color="white" p={5}>
         <VStack spacing={4} align="stretch" height="100%">
           <Heading as="h1" size="xl" textAlign="center">
-            Hand Gesture Recognition
+            Student Communication Interface
           </Heading>
 
           {/* Chat Box */}
