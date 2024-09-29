@@ -19,14 +19,36 @@ import {
 } from "@chakra-ui/react";
 import { RiCameraFill, RiCameraOffFill, RiRefreshFill } from "react-icons/ri";
 
+// WebSocket setup
+const SOCKET_URL = "ws://localhost:5000"; // Update with your WebSocket server URL
+
 export default function Home() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
+  const socketRef = useRef(null); // WebSocket ref
 
   const [camState, setCamState] = useState("on");
   const [detectedGesture, setDetectedGesture] = useState(null);
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    // Initialize WebSocket connection
+    socketRef.current = new WebSocket(SOCKET_URL);
+
+    // Handle incoming WebSocket messages
+    socketRef.current.onmessage = (event) => {
+      const receivedMessage = `Teacher: ${event.data}`;
+      setMessages((prevMessages) => [...prevMessages, receivedMessage]);
+    };
+
+    // Clean up WebSocket on component unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+    };
+  }, []);
 
   async function runHandpose() {
     const net = await handpose.load();
@@ -113,7 +135,14 @@ export default function Home() {
 
   function sendMessage() {
     if (inputText.trim()) {
-      setMessages((prevMessages) => [...prevMessages, `Student: ${inputText}`]);
+      const message = `Student: ${inputText}`;
+      setMessages((prevMessages) => [...prevMessages, message]);
+
+      // Send message via WebSocket
+      if (socketRef.current) {
+        socketRef.current.send(inputText);
+      }
+
       setInputText("");
     }
   }
