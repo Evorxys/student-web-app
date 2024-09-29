@@ -5,6 +5,7 @@ import Webcam from "react-webcam";
 import { drawHand } from "./components/handposeutil";
 import * as fp from "fingerpose";
 import Handsigns from "./components/handsigns";
+import io from 'socket.io-client';
 
 import {
   Text,
@@ -19,13 +20,13 @@ import {
 } from "@chakra-ui/react";
 import { RiCameraFill, RiCameraOffFill, RiRefreshFill } from "react-icons/ri";
 
-// WebSocket setup
-const SOCKET_URL = "ws://localhost:5000"; // Update with your WebSocket server URL
+// WebSocket setup using Socket.IO
+const SOCKET_URL = "https://websocket-server-teacher-student.onrender.com"; // Replace with your backend Socket.IO server URL
 
 export default function Home() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
-  const socketRef = useRef(null); // WebSocket ref
+  const socket = useRef(null); // Socket.IO ref
 
   const [camState, setCamState] = useState("on");
   const [detectedGesture, setDetectedGesture] = useState(null);
@@ -33,19 +34,19 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    // Initialize WebSocket connection
-    socketRef.current = new WebSocket(SOCKET_URL);
+    // Initialize Socket.IO connection
+    socket.current = io(SOCKET_URL);
 
-    // Handle incoming WebSocket messages
-    socketRef.current.onmessage = (event) => {
-      const receivedMessage = `Teacher: ${event.data}`;
+    // Handle incoming Socket.IO messages
+    socket.current.on('receiveMessage', (data) => {
+      const receivedMessage = `Teacher: ${data}`;
       setMessages((prevMessages) => [...prevMessages, receivedMessage]);
-    };
+    });
 
-    // Clean up WebSocket on component unmount
+    // Clean up the Socket.IO connection on component unmount
     return () => {
-      if (socketRef.current) {
-        socketRef.current.close();
+      if (socket.current) {
+        socket.current.disconnect();
       }
     };
   }, []);
@@ -138,9 +139,9 @@ export default function Home() {
       const message = `Student: ${inputText}`;
       setMessages((prevMessages) => [...prevMessages, message]);
 
-      // Send message via WebSocket
-      if (socketRef.current) {
-        socketRef.current.send(inputText);
+      // Send message via Socket.IO
+      if (socket.current) {
+        socket.current.emit('sendMessage', inputText); // Emit the message to the backend
       }
 
       setInputText("");
