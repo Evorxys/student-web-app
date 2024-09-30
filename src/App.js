@@ -32,12 +32,13 @@ export default function Home() {
   const [detectedGesture, setDetectedGesture] = useState(null);
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState([]);
+  const [teacherMessages, setTeacherMessages] = useState(""); // To stack teacher messages
 
   useEffect(() => {
     socket.current = io(SOCKET_URL);
     socket.current.on("receiveMessage", (data) => {
-      const receivedMessage = `Teacher: ${data.message}`;
-      setMessages((prevMessages) => [...prevMessages, receivedMessage]);
+      const receivedMessage = data.message;
+      setTeacherMessages((prevMessages) => prevMessages + " " + receivedMessage); // Stack teacher messages
     });
     return () => {
       if (socket.current) socket.current.disconnect();
@@ -152,40 +153,53 @@ export default function Home() {
             bg="gray.700"
             borderRadius="md"
             p={4}
-            flex={camState === "on" ? 1 : 2} // Expand chat box when camera is off
+            flex={camState === "on" ? 1 : 2}
             overflowY="auto"
             maxHeight={{ base: "200px", md: "300px" }}
             mb={4}
             border="2px solid #61dafb"
             borderRadius="15px"
           >
-            {messages.length === 0 ? (
+            {messages.length === 0 && !teacherMessages ? (
               <Text>No messages yet.</Text>
             ) : (
-              messages.map((msg, index) => {
-                const isTeacher = msg.startsWith("Teacher:");
-                const bgColor = isTeacher ? "blue.500" : "green.500";
-                const labelColor = isTeacher ? "blue.200" : "green.200";
-                const senderLabel = isTeacher ? "Teacher" : "Student";
-
-                return (
+              <>
+                {/* Teacher messages are stacked into one */}
+                {teacherMessages && (
                   <Box
-                    key={index}
-                    bg={bgColor}
+                    bg="blue.500"
                     color="white"
                     p={3}
                     borderRadius="lg"
                     mb={2}
                     maxWidth="80%"
-                    alignSelf={isTeacher ? "flex-start" : "flex-end"}
+                    alignSelf="flex-start"
                   >
-                    <Text fontWeight="bold" color={labelColor}>
-                      {senderLabel}
+                    <Text fontWeight="bold" color="blue.200">
+                      Teacher
                     </Text>
-                    <Text>{msg.replace(`${senderLabel}: `, "")}</Text>
+                    <Text>{teacherMessages}</Text>
                   </Box>
-                );
-              })
+                )}
+                {/* Display student messages individually */}
+                {messages.map((msg, index) => (
+                  <Box
+                    key={index}
+                    bg="green.500"
+                    color="white"
+                    p={3}
+                    borderRadius="lg"
+                    mb={2}
+                    maxWidth="80%"
+                    alignSelf="flex-end"
+                  >
+                    <Text fontWeight="bold" color="green.200">
+                      Student
+                    </Text>
+                    <Text>{msg.replace("Student: ", "")}</Text>
+                  </Box>
+                ))}
+              </>
             )}
           </Box>
 
@@ -196,8 +210,8 @@ export default function Home() {
               border="2px solid #61dafb"
               borderRadius="15px"
               overflow="hidden"
-              width={camState === "on" ? "100%" : "50%"} // Reduce camera size when off
-              maxWidth={camState === "on" ? "320px" : "160px"} // Adjust max width based on camera state
+              width={camState === "on" ? "100%" : "50%"}
+              maxWidth={camState === "on" ? "320px" : "160px"}
             >
               {camState === "on" ? (
                 <Webcam
