@@ -5,7 +5,7 @@ import Webcam from "react-webcam";
 import { drawHand } from "./components/handposeutil";
 import * as fp from "fingerpose";
 import Handsigns from "./components/handsigns";
-import io from 'socket.io-client';
+import io from "socket.io-client";
 
 import {
   Text,
@@ -38,7 +38,7 @@ export default function Home() {
     socket.current = io(SOCKET_URL);
 
     // Handle incoming messages (from teacher or server)
-    socket.current.on('receiveMessage', (data) => {
+    socket.current.on("receiveMessage", (data) => {
       const receivedMessage = `Teacher: ${data.message}`;
       console.log("Received from server:", data); // Log received message
       setMessages((prevMessages) => [...prevMessages, receivedMessage]);
@@ -143,7 +143,7 @@ export default function Home() {
       // Send message via Socket.IO
       if (socket.current) {
         console.log("Sending message:", inputText); // Log message being sent
-        socket.current.emit('sendMessage', { message: inputText }); // Send the message object with the 'message' key
+        socket.current.emit("sendMessage", { message: inputText }); // Send the message object with the 'message' key
       }
 
       setInputText("");
@@ -171,11 +171,30 @@ export default function Home() {
             {messages.length === 0 ? (
               <Text>No messages yet.</Text>
             ) : (
-              messages.map((msg, index) => (
-                <Text key={index} mb={2}>
-                  {msg}
-                </Text>
-              ))
+              messages.map((msg, index) => {
+                const isTeacher = msg.startsWith("Teacher:");
+                const bgColor = isTeacher ? "blue.500" : "green.500"; // Different color for Teacher and Student
+                const labelColor = isTeacher ? "blue.200" : "green.200";
+                const senderLabel = isTeacher ? "Teacher" : "Student";
+
+                return (
+                  <Box
+                    key={index}
+                    bg={bgColor}
+                    color="white"
+                    p={3}
+                    borderRadius="lg"
+                    mb={2}
+                    maxWidth="80%"
+                    alignSelf={isTeacher ? "flex-start" : "flex-end"} // Align Teacher to left, Student to right
+                  >
+                    <Text fontWeight="bold" color={labelColor}>
+                      {senderLabel}
+                    </Text>
+                    <Text>{msg.replace(`${senderLabel}: `, "")}</Text> {/* Remove label from the text */}
+                  </Box>
+                );
+              })
             )}
           </Box>
 
