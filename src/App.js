@@ -6,7 +6,6 @@ import { drawHand } from "./components/handposeutil";
 import * as fp from "fingerpose";
 import Handsigns from "./components/handsigns";
 import io from "socket.io-client";
-
 import {
   Text,
   Heading,
@@ -18,6 +17,7 @@ import {
   IconButton,
   HStack,
   Image,
+  Stack,
 } from "@chakra-ui/react";
 import { RiCameraFill, RiCameraOffFill, RiRefreshFill } from "react-icons/ri";
 
@@ -31,25 +31,19 @@ export default function Home() {
   const [camState, setCamState] = useState("on");
   const [detectedGesture, setDetectedGesture] = useState(null);
   const [inputText, setInputText] = useState("");
-  const [singleMessage, setSingleMessage] = useState(""); // Keep only the latest message
+  const [teacherMessages, setTeacherMessages] = useState("");
+  const [studentMessages, setStudentMessages] = useState([]);
 
-  // UseEffect to handle socket connection and receiving messages
   useEffect(() => {
     socket.current = io(SOCKET_URL);
-    
-    // On receiving a message from the teacher, set it in a single message state
     socket.current.on("receiveMessage", (data) => {
-      const receivedMessage = `Teacher: ${data.message}`;
-      setSingleMessage(receivedMessage); // Only set the latest message
+      setTeacherMessages(`Teacher: ${data.message}`);
     });
-
-    // Clean up socket connection when component unmounts
     return () => {
       if (socket.current) socket.current.disconnect();
     };
   }, []);
 
-  // Function to run Handpose model
   async function runHandpose() {
     const net = await handpose.load();
     setInterval(() => {
@@ -57,20 +51,17 @@ export default function Home() {
     }, 1000);
   }
 
-  // Function to detect hand gestures using the handpose model
   async function detect(net) {
     if (webcamRef.current && webcamRef.current.video.readyState === 4) {
       const video = webcamRef.current.video;
       const videoWidth = video.videoWidth;
       const videoHeight = video.videoHeight;
 
-      // Set video width and height
       webcamRef.current.video.width = videoWidth;
       webcamRef.current.video.height = videoHeight;
       canvasRef.current.width = videoWidth;
       canvasRef.current.height = videoHeight;
 
-      // Make detections
       const hands = await net.estimateHands(video);
 
       if (hands.length > 0) {
@@ -127,23 +118,19 @@ export default function Home() {
     runHandpose();
   }, []);
 
-  // Function to toggle camera state
   function turnOffCamera() {
     setCamState((prev) => (prev === "on" ? "off" : "on"));
   }
 
-  // Function to reset input text
   function resetInput() {
     setInputText("");
   }
 
-  // Function to send message
   function sendMessage() {
     if (inputText.trim()) {
       const message = `Student: ${inputText}`;
-      setSingleMessage(message); // Update the latest message
+      setStudentMessages((prevMessages) => [...prevMessages, message]);
 
-      // Emit message via socket
       if (socket.current) {
         socket.current.emit("sendMessage", { message: inputText });
       }
@@ -160,7 +147,24 @@ export default function Home() {
             Student Communication Interface
           </Heading>
 
-          {/* Chat Box */}
+          {/* Teacher Chat Box */}
+          <Box
+            bg="gray.700"
+            borderRadius="md"
+            p={4}
+            maxHeight="150px"
+            overflowY="auto"
+            mb={4}
+            border="2px solid #61dafb"
+            borderRadius="15px"
+          >
+            <Text color="blue.500" fontWeight="bold">
+              Teacher:
+            </Text>
+            <Text>{teacherMessages.replace("Teacher: ", "")}</Text>
+          </Box>
+
+          {/* Student Chat Box */}
           <Box
             bg="gray.700"
             borderRadius="md"
@@ -172,10 +176,24 @@ export default function Home() {
             border="2px solid #61dafb"
             borderRadius="15px"
           >
-            {/* Display the latest message in a single box */}
-            <Text fontWeight="bold" color="white">
-              {singleMessage ? singleMessage : "No messages yet."}
-            </Text>
+            {studentMessages.length === 0 ? (
+              <Text>No student messages yet.</Text>
+            ) : (
+              studentMessages.map((msg, index) => (
+                <Box
+                  key={index}
+                  bg="green.500"
+                  color="white"
+                  p={3}
+                  borderRadius="lg"
+                  mb={2}
+                  maxWidth="80%"
+                  alignSelf="flex-end"
+                >
+                  <Text>{msg.replace("Student: ", "")}</Text>
+                </Box>
+              ))
+            )}
           </Box>
 
           {/* Camera and Gesture Display */}
