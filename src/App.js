@@ -17,6 +17,7 @@ import {
   IconButton,
   HStack,
   Image,
+  Stack,
 } from "@chakra-ui/react";
 import { RiCameraFill, RiCameraOffFill, RiRefreshFill } from "react-icons/ri";
 
@@ -32,42 +33,16 @@ export default function Home() {
   const [inputText, setInputText] = useState("");
   const [teacherMessages, setTeacherMessages] = useState("");
   const [studentMessages, setStudentMessages] = useState([]);
-  const [lastMessageTime, setLastMessageTime] = useState(0);
-  const continuousThreshold = 2000; // Threshold for continuous speech in milliseconds
-  const [currentContinuousMessage, setCurrentContinuousMessage] = useState("");
 
   useEffect(() => {
     socket.current = io(SOCKET_URL);
     socket.current.on("receiveMessage", (data) => {
-      const currentTime = Date.now();
-      const isContinuous = currentTime - lastMessageTime < continuousThreshold;
-
-      if (isContinuous) {
-        // Append to the current continuous message
-        setCurrentContinuousMessage((prev) => prev + " " + data.message);
-      } else {
-        // Push the continuous message to the list and reset
-        if (currentContinuousMessage.trim()) {
-          setStudentMessages((prev) => [
-            ...prev,
-            `Student (Continuous): ${currentContinuousMessage}`,
-          ]);
-          setCurrentContinuousMessage(data.message; // Start a new continuous message
-        } else {
-          setStudentMessages((prev) => [
-            ...prev,
-            `Student: ${data.message}`,
-          ]);
-        }
-      }
-      
-      setLastMessageTime(currentTime);
       setTeacherMessages(`Teacher: ${data.message}`);
     });
     return () => {
       if (socket.current) socket.current.disconnect();
     };
-  }, [currentContinuousMessage, lastMessageTime]);
+  }, []);
 
   async function runHandpose() {
     const net = await handpose.load();
@@ -219,20 +194,6 @@ export default function Home() {
                 </Box>
               ))
             )}
-            {/* Display the current continuous message if it exists */}
-            {currentContinuousMessage && (
-              <Box
-                bg="green.500"
-                color="white"
-                p={3}
-                borderRadius="lg"
-                mb={2}
-                maxWidth="80%"
-                alignSelf="flex-end"
-              >
-                <Text>{currentContinuousMessage}</Text>
-              </Box>
-            )}
           </Box>
 
           {/* Camera and Gesture Display */}
@@ -272,38 +233,37 @@ export default function Home() {
                 }}
               />
             </Box>
-
-            <HStack spacing={4}>
-              <IconButton
-                icon={camState === "on" ? <RiCameraOffFill /> : <RiCameraFill />}
-                colorScheme={camState === "on" ? "red" : "green"}
-                onClick={turnOffCamera}
-                aria-label="Toggle Camera"
-              />
-              <IconButton
-                icon={<RiRefreshFill />}
-                colorScheme="blue"
-                onClick={resetInput}
-                aria-label="Reset Input"
-              />
-            </HStack>
           </HStack>
 
-          {/* Input Area */}
-          <HStack spacing={4}>
+          <Text fontSize="lg" textAlign="center">
+            Detected Gesture: {detectedGesture || "None"}
+          </Text>
+
+          {/* Input and Controls */}
+          <HStack>
             <Input
+              placeholder="Type your message..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Type your message..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  sendMessage();
-                }
-              }}
+              flex={1}
+              bg="gray.600"
+              color="white"
             />
-            <Button colorScheme="teal" onClick={sendMessage}>
+            <Button colorScheme="blue" onClick={sendMessage}>
               Send
             </Button>
+            <IconButton
+              icon={camState === "on" ? <RiCameraFill /> : <RiCameraOffFill />}
+              onClick={turnOffCamera}
+              colorScheme="orange"
+              aria-label="Toggle Camera"
+            />
+            <IconButton
+              icon={<RiRefreshFill />}
+              colorScheme="green"
+              aria-label="Reset Input"
+              onClick={resetInput}
+            />
           </HStack>
         </VStack>
       </Box>
