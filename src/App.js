@@ -20,7 +20,6 @@ import {
 } from "@chakra-ui/react";
 import { RiCameraFill, RiCameraOffFill, RiRefreshFill } from "react-icons/ri";
 
-// WebSocket setup using Socket.IO
 const SOCKET_URL = "https://websocket-server-teacher-student.onrender.com"; // Replace with your backend Socket.IO server URL
 
 export default function Home() {
@@ -167,6 +166,8 @@ export default function Home() {
             overflowY="auto"
             maxHeight={{ base: "200px", md: "300px" }} // Responsive height
             mb={4}
+            border="2px solid #61dafb" // Added border to chat box
+            borderRadius="15px" // Added radius to chat box
           >
             {messages.length === 0 ? (
               <Text>No messages yet.</Text>
@@ -200,7 +201,12 @@ export default function Home() {
 
           {/* Camera and Gesture Display */}
           <HStack justifyContent="center">
-            <Box position="relative">
+            <Box
+              position="relative"
+              border="2px solid #61dafb" // Added border to camera box
+              borderRadius="15px" // Added radius to camera box
+              overflow="hidden" // Hide overflow for a cleaner look
+            >
               {camState === "on" ? (
                 <Webcam
                   ref={webcamRef}
