@@ -17,7 +17,6 @@ import {
   IconButton,
   HStack,
   Image,
-  Stack,
 } from "@chakra-ui/react";
 import { RiCameraFill, RiCameraOffFill, RiRefreshFill } from "react-icons/ri";
 
@@ -31,13 +30,13 @@ export default function Home() {
   const [camState, setCamState] = useState("on");
   const [detectedGesture, setDetectedGesture] = useState(null);
   const [inputText, setInputText] = useState("");
-  const [teacherMessages, setTeacherMessages] = useState("");
+  const [teacherMessages, setTeacherMessages] = useState(""); // Changed to hold continuous messages
   const [studentMessages, setStudentMessages] = useState([]);
 
   useEffect(() => {
     socket.current = io(SOCKET_URL);
     socket.current.on("receiveMessage", (data) => {
-      setTeacherMessages(`Teacher: ${data.message}`);
+      setTeacherMessages((prev) => `${prev} ${data.message}`); // Append new messages to existing messages
     });
     return () => {
       if (socket.current) socket.current.disconnect();
@@ -161,7 +160,7 @@ export default function Home() {
             <Text color="blue.500" fontWeight="bold">
               Teacher:
             </Text>
-            <Text>{teacherMessages.replace("Teacher: ", "")}</Text>
+            <Text>{teacherMessages || "No messages from teacher yet."}</Text>
           </Box>
 
           {/* Student Chat Box */}
