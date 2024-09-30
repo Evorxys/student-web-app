@@ -31,18 +31,16 @@ export default function Home() {
   const [camState, setCamState] = useState("on");
   const [detectedGesture, setDetectedGesture] = useState(null);
   const [inputText, setInputText] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [singleMessage, setSingleMessage] = useState(""); // Keep only the latest message
 
   // UseEffect to handle socket connection and receiving messages
   useEffect(() => {
     socket.current = io(SOCKET_URL);
     
-    // On receiving a message from the teacher, append it to the messages array
+    // On receiving a message from the teacher, set it in a single message state
     socket.current.on("receiveMessage", (data) => {
       const receivedMessage = `Teacher: ${data.message}`;
-      
-      // Only append the new message once, avoid concatenation of entire previous messages
-      setMessages((prevMessages) => [...prevMessages, receivedMessage]);
+      setSingleMessage(receivedMessage); // Only set the latest message
     });
 
     // Clean up socket connection when component unmounts
@@ -143,7 +141,7 @@ export default function Home() {
   function sendMessage() {
     if (inputText.trim()) {
       const message = `Student: ${inputText}`;
-      setMessages((prevMessages) => [...prevMessages, message]);
+      setSingleMessage(message); // Update the latest message
 
       // Emit message via socket
       if (socket.current) {
@@ -174,34 +172,10 @@ export default function Home() {
             border="2px solid #61dafb"
             borderRadius="15px"
           >
-            {messages.length === 0 ? (
-              <Text>No messages yet.</Text>
-            ) : (
-              messages.map((msg, index) => {
-                const isTeacher = msg.startsWith("Teacher:");
-                const bgColor = isTeacher ? "blue.500" : "green.500";
-                const labelColor = isTeacher ? "blue.200" : "green.200";
-                const senderLabel = isTeacher ? "Teacher" : "Student";
-
-                return (
-                  <Box
-                    key={index}
-                    bg={bgColor}
-                    color="white"
-                    p={3}
-                    borderRadius="lg"
-                    mb={2}
-                    maxWidth="80%"
-                    alignSelf={isTeacher ? "flex-start" : "flex-end"}
-                  >
-                    <Text fontWeight="bold" color={labelColor}>
-                      {senderLabel}
-                    </Text>
-                    <Text>{msg.replace(`${senderLabel}: `, "")}</Text>
-                  </Box>
-                );
-              })
-            )}
+            {/* Display the latest message in a single box */}
+            <Text fontWeight="bold" color="white">
+              {singleMessage ? singleMessage : "No messages yet."}
+            </Text>
           </Box>
 
           {/* Camera and Gesture Display */}
