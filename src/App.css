@@ -36,3 +36,9 @@
     transform: rotate(360deg);
   }
 }
+
+.app-background {
+  background-image: url('https://i.pinimg.com/564x/88/19/1a/88191a4d44d439221c62ddf1ed03fcda.jpg');
+  background-size: cover;
+  background-position: center;
+}
