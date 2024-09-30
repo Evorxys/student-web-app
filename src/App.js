@@ -17,7 +17,6 @@ import {
   IconButton,
   HStack,
   Image,
-  Stack,
 } from "@chakra-ui/react";
 import { RiCameraFill, RiCameraOffFill, RiRefreshFill } from "react-icons/ri";
 
@@ -31,18 +30,25 @@ export default function Home() {
   const [camState, setCamState] = useState("on");
   const [detectedGesture, setDetectedGesture] = useState(null);
   const [inputText, setInputText] = useState("");
-  const [teacherMessages, setTeacherMessages] = useState("");
+  const [teacherMessages, setTeacherMessages] = useState([]);
+  const [latestMessage, setLatestMessage] = useState(""); // To track the latest received message
   const [studentMessages, setStudentMessages] = useState([]);
 
   useEffect(() => {
     socket.current = io(SOCKET_URL);
     socket.current.on("receiveMessage", (data) => {
-      setTeacherMessages(`Teacher: ${data.message}`);
+      const newMessage = data.message;
+
+      // Check if the new message is different from the last message to avoid duplication
+      if (newMessage !== latestMessage) {
+        setLatestMessage(newMessage);
+        setTeacherMessages((prevMessages) => [...prevMessages, `Teacher: ${newMessage}`]);
+      }
     });
     return () => {
       if (socket.current) socket.current.disconnect();
     };
-  }, []);
+  }, [latestMessage]); // Dependency array ensures useEffect runs when latestMessage changes
 
   async function runHandpose() {
     const net = await handpose.load();
@@ -147,7 +153,7 @@ export default function Home() {
             Student Communication Interface
           </Heading>
 
-          {/* Teacher Chat Box */}
+          {/* Teacher Messages Box */}
           <Box
             bg="gray.700"
             borderRadius="md"
@@ -158,10 +164,15 @@ export default function Home() {
             border="2px solid #61dafb"
             borderRadius="15px"
           >
-            <Text color="blue.500" fontWeight="bold">
-              Teacher:
-            </Text>
-            <Text>{teacherMessages.replace("Teacher: ", "")}</Text>
+            {teacherMessages.length === 0 ? (
+              <Text>No teacher messages yet.</Text>
+            ) : (
+              teacherMessages.map((msg, index) => (
+                <Text key={index} color="blue.500">
+                  {msg}
+                </Text>
+              ))
+            )}
           </Box>
 
           {/* Student Chat Box */}
@@ -260,9 +271,9 @@ export default function Home() {
             />
             <IconButton
               icon={<RiRefreshFill />}
-              colorScheme="green"
-              aria-label="Reset Input"
               onClick={resetInput}
+              colorScheme="red"
+              aria-label="Reset Input"
             />
           </HStack>
         </VStack>
