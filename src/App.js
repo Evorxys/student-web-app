@@ -219,7 +219,7 @@ export default function Home() {
                 />
               ) : (
                 <Image
-                  src="https://i.pinimg.com/564x/88/19/1a/88191a4d44d439221c62ddf1ed03fcda.jpg" // Replace with your placeholder image URL
+                  src="https://i.pinimg.com/564x/59/d0/43/59d043a44ecc38b430b191d9da95171d.jpg" // Replace with your placeholder image URL
                   alt="Camera off placeholder"
                   width="100%" // Full width for responsiveness
                   maxWidth="320px" // Max width constraint
