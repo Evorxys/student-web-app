@@ -17,6 +17,7 @@ import {
   Input,
   IconButton,
   HStack,
+  Image, // Import Chakra UI Image component
 } from "@chakra-ui/react";
 import { RiCameraFill, RiCameraOffFill, RiRefreshFill } from "react-icons/ri";
 
@@ -217,7 +218,13 @@ export default function Home() {
                   }}
                 />
               ) : (
-                <Box background="black" height="240px" width="100%" maxWidth="320px" />
+                <Image
+                  src="https://i.pinimg.com/564x/88/19/1a/88191a4d44d439221c62ddf1ed03fcda.jpg" // Replace with your placeholder image URL
+                  alt="Camera off placeholder"
+                  width="100%" // Full width for responsiveness
+                  maxWidth="320px" // Max width constraint
+                  height="auto" // Maintain aspect ratio
+                />
               )}
               <canvas
                 ref={canvasRef}
@@ -259,7 +266,7 @@ export default function Home() {
             <IconButton
               icon={<RiRefreshFill />}
               colorScheme="green"
-              aria-label="Reset"
+              aria-label="Reset Input"
               onClick={resetInput}
             />
           </HStack>
