@@ -17,16 +17,16 @@ import {
   Input,
   IconButton,
   HStack,
-  Image, // Import Chakra UI Image component
+  Image,
 } from "@chakra-ui/react";
 import { RiCameraFill, RiCameraOffFill, RiRefreshFill } from "react-icons/ri";
 
-const SOCKET_URL = "https://websocket-server-teacher-student.onrender.com"; // Replace with your backend Socket.IO server URL
+const SOCKET_URL = "https://websocket-server-teacher-student.onrender.com";
 
 export default function Home() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
-  const socket = useRef(null); // Socket.IO ref
+  const socket = useRef(null);
 
   const [camState, setCamState] = useState("on");
   const [detectedGesture, setDetectedGesture] = useState(null);
@@ -34,21 +34,13 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    // Initialize Socket.IO connection
     socket.current = io(SOCKET_URL);
-
-    // Handle incoming messages (from teacher or server)
     socket.current.on("receiveMessage", (data) => {
       const receivedMessage = `Teacher: ${data.message}`;
-      console.log("Received from server:", data); // Log received message
       setMessages((prevMessages) => [...prevMessages, receivedMessage]);
     });
-
-    // Clean up the Socket.IO connection on component unmount
     return () => {
-      if (socket.current) {
-        socket.current.disconnect();
-      }
+      if (socket.current) socket.current.disconnect();
     };
   }, []);
 
@@ -103,9 +95,8 @@ export default function Home() {
         ]);
 
         const estimatedGestures = await GE.estimate(hands[0].landmarks, 6.5);
-        console.log("Estimated Gestures:", estimatedGestures);
 
-        if (estimatedGestures.gestures && estimatedGestures.gestures.length > 0) {
+        if (estimatedGestures.gestures.length > 0) {
           const maxConfidenceGesture = estimatedGestures.gestures.reduce(
             (prev, current) => (prev.score > current.score ? prev : current),
             estimatedGestures.gestures[0]
@@ -140,10 +131,8 @@ export default function Home() {
       const message = `Student: ${inputText}`;
       setMessages((prevMessages) => [...prevMessages, message]);
 
-      // Send message via Socket.IO
       if (socket.current) {
-        console.log("Sending message:", inputText); // Log message being sent
-        socket.current.emit("sendMessage", { message: inputText }); // Send the message object with the 'message' key
+        socket.current.emit("sendMessage", { message: inputText });
       }
 
       setInputText("");
@@ -163,19 +152,19 @@ export default function Home() {
             bg="gray.700"
             borderRadius="md"
             p={4}
-            flex={1}
+            flex={camState === "on" ? 1 : 2} // Expand chat box when camera is off
             overflowY="auto"
-            maxHeight={{ base: "200px", md: "300px" }} // Responsive height
+            maxHeight={{ base: "200px", md: "300px" }}
             mb={4}
-            border="2px solid #61dafb" // Added border to chat box
-            borderRadius="15px" // Added radius to chat box
+            border="2px solid #61dafb"
+            borderRadius="15px"
           >
             {messages.length === 0 ? (
               <Text>No messages yet.</Text>
             ) : (
               messages.map((msg, index) => {
                 const isTeacher = msg.startsWith("Teacher:");
-                const bgColor = isTeacher ? "blue.500" : "green.500"; // Different color for Teacher and Student
+                const bgColor = isTeacher ? "blue.500" : "green.500";
                 const labelColor = isTeacher ? "blue.200" : "green.200";
                 const senderLabel = isTeacher ? "Teacher" : "Student";
 
@@ -188,12 +177,12 @@ export default function Home() {
                     borderRadius="lg"
                     mb={2}
                     maxWidth="80%"
-                    alignSelf={isTeacher ? "flex-start" : "flex-end"} // Align Teacher to left, Student to right
+                    alignSelf={isTeacher ? "flex-start" : "flex-end"}
                   >
                     <Text fontWeight="bold" color={labelColor}>
                       {senderLabel}
                     </Text>
-                    <Text>{msg.replace(`${senderLabel}: `, "")}</Text> {/* Remove label from the text */}
+                    <Text>{msg.replace(`${senderLabel}: `, "")}</Text>
                   </Box>
                 );
               })
@@ -204,26 +193,26 @@ export default function Home() {
           <HStack justifyContent="center">
             <Box
               position="relative"
-              border="2px solid #61dafb" // Added border to camera box
-              borderRadius="15px" // Added radius to camera box
-              overflow="hidden" // Hide overflow for a cleaner look
+              border="2px solid #61dafb"
+              borderRadius="15px"
+              overflow="hidden"
+              width={camState === "on" ? "100%" : "50%"} // Reduce camera size when off
+              maxWidth={camState === "on" ? "320px" : "160px"} // Adjust max width based on camera state
             >
               {camState === "on" ? (
                 <Webcam
                   ref={webcamRef}
                   style={{
-                    width: "100%", // Full width for responsiveness
-                    maxWidth: "320px", // Max width constraint
-                    height: "auto", // Maintain aspect ratio
+                    width: "100%",
+                    height: "auto",
                   }}
                 />
               ) : (
                 <Image
-                  src="https://i.pinimg.com/564x/59/d0/43/59d043a44ecc38b430b191d9da95171d.jpg" // Replace with your placeholder image URL
+                  src="https://i.pinimg.com/564x/59/d0/43/59d043a44ecc38b430b191d9da95171d.jpg"
                   alt="Camera off placeholder"
-                  width="100%" // Full width for responsiveness
-                  maxWidth="320px" // Max width constraint
-                  height="auto" // Maintain aspect ratio
+                  width="100%"
+                  height="auto"
                 />
               )}
               <canvas
@@ -233,7 +222,6 @@ export default function Home() {
                   top: 0,
                   left: 0,
                   width: "100%",
-                  maxWidth: "320px",
                   height: "auto",
                 }}
               />
