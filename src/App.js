@@ -32,19 +32,26 @@ export default function Home() {
   const [detectedGesture, setDetectedGesture] = useState(null);
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState([]);
-  const [teacherMessages, setTeacherMessages] = useState(""); // To stack teacher messages
 
+  // UseEffect to handle socket connection and receiving messages
   useEffect(() => {
     socket.current = io(SOCKET_URL);
+    
+    // On receiving a message from the teacher, append it to the messages array
     socket.current.on("receiveMessage", (data) => {
-      const receivedMessage = data.message;
-      setTeacherMessages((prevMessages) => prevMessages + " " + receivedMessage); // Stack teacher messages
+      const receivedMessage = `Teacher: ${data.message}`;
+      
+      // Only append the new message once, avoid concatenation of entire previous messages
+      setMessages((prevMessages) => [...prevMessages, receivedMessage]);
     });
+
+    // Clean up socket connection when component unmounts
     return () => {
       if (socket.current) socket.current.disconnect();
     };
   }, []);
 
+  // Function to run Handpose model
   async function runHandpose() {
     const net = await handpose.load();
     setInterval(() => {
@@ -52,17 +59,20 @@ export default function Home() {
     }, 1000);
   }
 
+  // Function to detect hand gestures using the handpose model
   async function detect(net) {
     if (webcamRef.current && webcamRef.current.video.readyState === 4) {
       const video = webcamRef.current.video;
       const videoWidth = video.videoWidth;
       const videoHeight = video.videoHeight;
 
+      // Set video width and height
       webcamRef.current.video.width = videoWidth;
       webcamRef.current.video.height = videoHeight;
       canvasRef.current.width = videoWidth;
       canvasRef.current.height = videoHeight;
 
+      // Make detections
       const hands = await net.estimateHands(video);
 
       if (hands.length > 0) {
@@ -119,19 +129,23 @@ export default function Home() {
     runHandpose();
   }, []);
 
+  // Function to toggle camera state
   function turnOffCamera() {
     setCamState((prev) => (prev === "on" ? "off" : "on"));
   }
 
+  // Function to reset input text
   function resetInput() {
     setInputText("");
   }
 
+  // Function to send message
   function sendMessage() {
     if (inputText.trim()) {
       const message = `Student: ${inputText}`;
       setMessages((prevMessages) => [...prevMessages, message]);
 
+      // Emit message via socket
       if (socket.current) {
         socket.current.emit("sendMessage", { message: inputText });
       }
@@ -153,53 +167,40 @@ export default function Home() {
             bg="gray.700"
             borderRadius="md"
             p={4}
-            flex={camState === "on" ? 1 : 2}
+            flex={camState === "on" ? 1 : 2} // Expand chat box when camera is off
             overflowY="auto"
             maxHeight={{ base: "200px", md: "300px" }}
             mb={4}
             border="2px solid #61dafb"
             borderRadius="15px"
           >
-            {messages.length === 0 && !teacherMessages ? (
+            {messages.length === 0 ? (
               <Text>No messages yet.</Text>
             ) : (
-              <>
-                {/* Teacher messages are stacked into one */}
-                {teacherMessages && (
-                  <Box
-                    bg="blue.500"
-                    color="white"
-                    p={3}
-                    borderRadius="lg"
-                    mb={2}
-                    maxWidth="80%"
-                    alignSelf="flex-start"
-                  >
-                    <Text fontWeight="bold" color="blue.200">
-                      Teacher
-                    </Text>
-                    <Text>{teacherMessages}</Text>
-                  </Box>
-                )}
-                {/* Display student messages individually */}
-                {messages.map((msg, index) => (
+              messages.map((msg, index) => {
+                const isTeacher = msg.startsWith("Teacher:");
+                const bgColor = isTeacher ? "blue.500" : "green.500";
+                const labelColor = isTeacher ? "blue.200" : "green.200";
+                const senderLabel = isTeacher ? "Teacher" : "Student";
+
+                return (
                   <Box
                     key={index}
-                    bg="green.500"
+                    bg={bgColor}
                     color="white"
                     p={3}
                     borderRadius="lg"
                     mb={2}
                     maxWidth="80%"
-                    alignSelf="flex-end"
+                    alignSelf={isTeacher ? "flex-start" : "flex-end"}
                   >
-                    <Text fontWeight="bold" color="green.200">
-                      Student
+                    <Text fontWeight="bold" color={labelColor}>
+                      {senderLabel}
                     </Text>
-                    <Text>{msg.replace("Student: ", "")}</Text>
+                    <Text>{msg.replace(`${senderLabel}: `, "")}</Text>
                   </Box>
-                ))}
-              </>
+                );
+              })
             )}
           </Box>
 
@@ -210,8 +211,8 @@ export default function Home() {
               border="2px solid #61dafb"
               borderRadius="15px"
               overflow="hidden"
-              width={camState === "on" ? "100%" : "50%"}
-              maxWidth={camState === "on" ? "320px" : "160px"}
+              width={camState === "on" ? "100%" : "50%"} // Reduce camera size when off
+              maxWidth={camState === "on" ? "320px" : "160px"} // Adjust max width based on camera state
             >
               {camState === "on" ? (
                 <Webcam
