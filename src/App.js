@@ -31,19 +31,14 @@ export default function Home() {
   const [camState, setCamState] = useState("on");
   const [detectedGesture, setDetectedGesture] = useState(null);
   const [inputText, setInputText] = useState("");
-  const [teacherMessages, setTeacherMessages] = useState([]); // Change to array
+  const [teacherMessages, setTeacherMessages] = useState("");
   const [studentMessages, setStudentMessages] = useState([]);
 
   useEffect(() => {
     socket.current = io(SOCKET_URL);
-
     socket.current.on("receiveMessage", (data) => {
-      setTeacherMessages((prevMessages) => [
-        ...prevMessages,
-        `Teacher: ${data.message}`,
-      ]);
+      setTeacherMessages(`Teacher: ${data.message}`);
     });
-
     return () => {
       if (socket.current) socket.current.disconnect();
     };
@@ -166,13 +161,7 @@ export default function Home() {
             <Text color="blue.500" fontWeight="bold">
               Teacher:
             </Text>
-            {teacherMessages.length === 0 ? (
-              <Text>No messages from the teacher yet.</Text>
-            ) : (
-              teacherMessages.map((msg, index) => (
-                <Text key={index}>{msg.replace("Teacher: ", "")}</Text>
-              ))
-            )}
+            <Text>{teacherMessages.replace("Teacher: ", "")}</Text>
           </Box>
 
           {/* Student Chat Box */}
