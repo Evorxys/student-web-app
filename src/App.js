@@ -38,11 +38,7 @@ export default function Home() {
     socket.current = io(SOCKET_URL);
 
     // Handle incoming messages (from teacher or server)
-<<<<<<< HEAD
     socket.current.on("receiveMessage", (data) => {
-=======
-    socket.current.on('receiveMessage', (data) => {
->>>>>>> d97bebd5f1a680fef314d30a00a8474463877b94
       const receivedMessage = `Teacher: ${data.message}`;
       console.log("Received from server:", data); // Log received message
       setMessages((prevMessages) => [...prevMessages, receivedMessage]);
@@ -147,11 +143,7 @@ export default function Home() {
       // Send message via Socket.IO
       if (socket.current) {
         console.log("Sending message:", inputText); // Log message being sent
-<<<<<<< HEAD
         socket.current.emit("sendMessage", { message: inputText }); // Send the message object with the 'message' key
-=======
-        socket.current.emit('sendMessage', { message: inputText }); // Send the message object with the 'message' key
->>>>>>> d97bebd5f1a680fef314d30a00a8474463877b94
       }
 
       setInputText("");
