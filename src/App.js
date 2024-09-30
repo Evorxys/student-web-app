@@ -37,9 +37,10 @@ export default function Home() {
     // Initialize Socket.IO connection
     socket.current = io(SOCKET_URL);
 
-    // Handle incoming Socket.IO messages
+    // Handle incoming messages (from teacher or server)
     socket.current.on('receiveMessage', (data) => {
-      const receivedMessage = `Teacher: ${data}`;
+      const receivedMessage = `Teacher: ${data.message}`;
+      console.log("Received from server:", data); // Log received message
       setMessages((prevMessages) => [...prevMessages, receivedMessage]);
     });
 
@@ -141,7 +142,8 @@ export default function Home() {
 
       // Send message via Socket.IO
       if (socket.current) {
-        socket.current.emit('sendMessage', inputText); // Emit the message to the backend
+        console.log("Sending message:", inputText); // Log message being sent
+        socket.current.emit('sendMessage', { message: inputText }); // Send the message object with the 'message' key
       }
 
       setInputText("");
@@ -153,7 +155,7 @@ export default function Home() {
       <Box bgColor="#2D3748" height="100vh" color="white" p={5}>
         <VStack spacing={4} align="stretch" height="100%">
           <Heading as="h1" size="xl" textAlign="center">
-            Hand Gesture Recognition
+            Student Communication Interface
           </Heading>
 
           {/* Chat Box */}
